@@ -11,8 +11,8 @@ exports.signup = (req, res) => {
                 err: errorHandler(err),
             });
         }
-        user.salt = undefined;
-        user.hash_password = undefined;
+        console.log("user.hashed_password", user.hashed_password);
+        console.log("user", user);
         res.json({
             user,
         });
