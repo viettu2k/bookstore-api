@@ -1,10 +1,11 @@
 const express = require("express");
 const router = express.Router();
 
-const { create } = require("../controllers/category");
+const { create, categoryById, read } = require("../controllers/category");
 const { requireSignin, isAuth, isAdmin } = require("../controllers/auth");
 const { userById } = require("../controllers/user");
 
+router.get("/categories/:categoryId", read);
 router.post(
     "/categories/create/:userId",
     requireSignin,
@@ -14,5 +15,6 @@ router.post(
 );
 
 router.param("userId", userById);
+router.param("categoryId", categoryById);
 
 module.exports = router;
