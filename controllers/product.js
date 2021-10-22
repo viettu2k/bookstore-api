@@ -7,8 +7,6 @@ const { errorHandler } = require("../helpers/dbErrorHandler");
 exports.productById = (req, res, next, id) => {
     Product.findById(id).exec((err, product) => {
         if (err || !product) {
-            console.log("err", err);
-            console.log("product", product);
             return res.status(400).json({
                 error: "Product not found",
             });
@@ -32,9 +30,9 @@ exports.create = (req, res) => {
                 error: "Image could not be uploaded",
             });
         }
-
         // check for all fields
         const { name, description, price, category, quantity, shipping } = fields;
+
         if (!name ||
             !description ||
             !price ||
@@ -53,6 +51,7 @@ exports.create = (req, res) => {
         // 1mb = 1000000
 
         if (files.photo) {
+            // console.log("FILES PHOTO: ", files.photo);
             if (files.photo.size > 1000000) {
                 return res.status(400).json({
                     error: "Image should be less than 1mb in size",
@@ -64,7 +63,9 @@ exports.create = (req, res) => {
 
         product.save((err, result) => {
             if (err) {
-                return res.status(400).json({ error: errorHandler(err) });
+                return res.status(400).json({
+                    error: errorHandler(err),
+                });
             }
             res.json(result);
         });
@@ -75,7 +76,9 @@ exports.remove = (req, res) => {
     let product = req.product;
     product.remove((err, deletedProduct) => {
         if (err) {
-            return res.status(400).json({ error: errorHandler(err) });
+            return res.status(400).json({
+                error: errorHandler(err),
+            });
         }
         res.json({
             message: "Product deleted successfully",
@@ -92,9 +95,9 @@ exports.update = (req, res) => {
                 error: "Image could not be uploaded",
             });
         }
-
         // check for all fields
         const { name, description, price, category, quantity, shipping } = fields;
+
         if (!name ||
             !description ||
             !price ||
@@ -114,6 +117,7 @@ exports.update = (req, res) => {
         // 1mb = 1000000
 
         if (files.photo) {
+            // console.log("FILES PHOTO: ", files.photo);
             if (files.photo.size > 1000000) {
                 return res.status(400).json({
                     error: "Image should be less than 1mb in size",
@@ -125,19 +129,21 @@ exports.update = (req, res) => {
 
         product.save((err, result) => {
             if (err) {
-                return res.status(400).json({ error: errorHandler(err) });
+                return res.status(400).json({
+                    error: errorHandler(err),
+                });
             }
             res.json(result);
         });
     });
 };
 
-/* 
-sell / arrival 
-by sell = /products?sortBy=sold&order=desc&limit=4
-by arrival = /products?sortBy=createdAt&order=desc&limit=4
-if no params are sent, then all product are returned
-*/
+/**
+ * sell / arrival
+ * by sell = /products?sortBy=sold&order=desc&limit=4
+ * by arrival = /products?sortBy=createdAt&order=desc&limit=4
+ * if no params are sent, then all products are returned
+ */
 
 exports.list = (req, res) => {
     let order = req.query.order ? req.query.order : "asc";
@@ -161,15 +167,15 @@ exports.list = (req, res) => {
         });
 };
 
-/*  
-it will find the products based on the req product category
-other products that has the same category, will be return
-*/
+/**
+ * it will find the products based on the req product category
+ * other products that has the same category, will be returned
+ */
+
 exports.listRelated = (req, res) => {
     let limit = req.query.limit ? parseInt(req.query.limit) : 6;
 
     Product.find({ _id: { $ne: req.product }, category: req.product.category })
-        .select("-photo")
         .limit(limit)
         .populate("category", "_id name")
         .exec((err, products) => {
@@ -180,4 +186,15 @@ exports.listRelated = (req, res) => {
             }
             res.json(products);
         });
+};
+
+exports.listCategories = (req, res) => {
+    Product.distinct("category", {}, (err, categories) => {
+        if (err) {
+            return res.status(400).json({
+                error: "Categories not found",
+            });
+        }
+        res.json(categories);
+    });
 };
