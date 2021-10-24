@@ -1,10 +1,12 @@
 const express = require("express");
 const router = express.Router();
 
-const { requireSignin, isAuth, isAdmin } = require("../controllers/auth");
-const { userById, read } = require("../controllers/user");
+const { requireSignin, isAuth } = require("../controllers/auth");
+const { userById, read, update } = require("../controllers/user");
 
-router.get("/users/:userId", requireSignin, isAuth, read);
+router.get("/secret/:userId", requireSignin, isAuth, read);
+router.get("/user/:userId", requireSignin, isAuth, read);
+router.put("/user/:userId", requireSignin, isAuth, update);
 
 router.param("userId", userById);
 
