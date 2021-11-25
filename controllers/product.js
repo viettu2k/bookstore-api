@@ -211,7 +211,7 @@ exports.listBySearch = (req, res) => {
     let order = req.body.order ? req.body.order : "desc";
     let sortBy = req.body.sortBy ? req.body.sortBy : "_id";
     let limit = req.body.limit ? parseInt(req.body.limit) : 100;
-    let skip = parseInt(req.body.skip) || 0;
+    let skip = parseInt(req.body.skip);
     let findArgs = {};
 
     // console.log(order, sortBy, limit, skip, req.body.filters);
@@ -254,9 +254,32 @@ exports.listBySearch = (req, res) => {
 };
 
 exports.photo = (req, res, next) => {
-    if (req.product.photo) {
+    if (req.product.photo.data) {
         res.set("Content-Type", req.product.photo.contentType);
         return res.send(req.product.photo.data);
     }
     next();
+};
+
+exports.listSearch = (req, res) => {
+    // create query object to hold search value and category value
+    const query = {};
+    // assign search value to query.name
+    if (req.query.search) {
+        query.name = { $regex: req.query.search, $options: "i" };
+        // assign category value to query.category
+        if (req.query.category && req.query.category != "All") {
+            query.category = req.query.category;
+        }
+        // find the product based on query object with 2 properties
+        // search and category
+        Product.find(query, (err, products) => {
+            if (err) {
+                return res.status(400).json({
+                    error: errorHandler(err),
+                });
+            }
+            res.json(products);
+        }).select("-photo");
+    }
 };
