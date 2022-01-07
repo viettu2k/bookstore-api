@@ -1,12 +1,29 @@
 const { Order, CartItem } = require("../models/order");
 const { errorHandler } = require("../helpers/dbErrorHandler");
 
+exports.orderById = (req, res, next, id) => {
+    Order.findById(id)
+        .populate("products.product", "name price")
+        .exec((err, order) => {
+            if (err || !order) {
+                return res.status(400).json({
+                    error: errorHandler(err),
+                });
+            }
+            req.order = order;
+            next();
+        });
+};
+
 exports.create = (req, res) => {
+    // console.log("CREATE ORDER: ", req.body);
     req.body.order.user = req.profile;
     const order = new Order(req.body.order);
     order.save((error, data) => {
         if (error) {
-            return res.status(400).json({ error: errorHandler(error) });
+            return res.status(400).json({
+                error: errorHandler(error),
+            });
         }
         res.json(data);
     });
@@ -18,12 +35,27 @@ exports.listOrders = (req, res) => {
         .sort("-created")
         .exec((err, orders) => {
             if (err) {
-                return res.status(400).json({ error: errorHandler(error) });
+                return res.status(400).json({
+                    error: errorHandler(error),
+                });
             }
-            res, json(orders);
+            res.json(orders);
         });
 };
 
 exports.getStatusValues = (req, res) => {
-    res.json(Oder.schema.path("status").enumValues);
+    res.json(Order.schema.path("status").enumValues);
+};
+
+exports.updateOrderStatus = (req, res) => {
+    Order.updateOne({ _id: req.body.orderId }, { $set: { status: req.body.status } },
+        (err, order) => {
+            if (err) {
+                return res.status(400).json({
+                    error: errorHandler(err),
+                });
+            }
+            res.json(order);
+        }
+    );
 };
