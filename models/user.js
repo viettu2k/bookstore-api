@@ -1,23 +1,23 @@
 const mongoose = require("mongoose");
 const crypto = require("crypto");
-const { v1: uuidv1 } = require("uuid");
+const uuidv1 = require("uuid/v1");
 
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
         trim: true,
-        require: true,
-        maxLength: 32,
+        required: true,
+        maxlength: 32,
     },
     email: {
         type: String,
         trim: true,
-        require: true,
+        required: true,
         unique: true,
     },
     hashed_password: {
         type: String,
-        require: true,
+        required: true,
     },
     about: {
         type: String,
