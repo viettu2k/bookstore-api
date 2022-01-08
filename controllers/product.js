@@ -5,15 +5,17 @@ const Product = require("../models/product");
 const { errorHandler } = require("../helpers/dbErrorHandler");
 
 exports.productById = (req, res, next, id) => {
-    Product.findById(id).exec((err, product) => {
-        if (err || !product) {
-            return res.status(400).json({
-                error: "Product not found",
-            });
-        }
-        req.product = product;
-        next();
-    });
+    Product.findById(id)
+        .populate("category")
+        .exec((err, product) => {
+            if (err || !product) {
+                return res.status(400).json({
+                    error: "Product not found",
+                });
+            }
+            req.product = product;
+            next();
+        });
 };
 
 exports.read = (req, res) => {
@@ -63,6 +65,7 @@ exports.create = (req, res) => {
 
         product.save((err, result) => {
             if (err) {
+                console.log("PRODUCT CREATE ERROR ", err);
                 return res.status(400).json({
                     error: errorHandler(err),
                 });
@@ -93,20 +96,6 @@ exports.update = (req, res) => {
         if (err) {
             return res.status(400).json({
                 error: "Image could not be uploaded",
-            });
-        }
-        // check for all fields
-        const { name, description, price, category, quantity, shipping } = fields;
-
-        if (!name ||
-            !description ||
-            !price ||
-            !category ||
-            !quantity ||
-            !shipping
-        ) {
-            return res.status(400).json({
-                error: "All fields are required",
             });
         }
 
@@ -267,7 +256,7 @@ exports.listSearch = (req, res) => {
     // assign search value to query.name
     if (req.query.search) {
         query.name = { $regex: req.query.search, $options: "i" };
-        // assign category value to query.category
+        // assigne category value to query.category
         if (req.query.category && req.query.category != "All") {
             query.category = req.query.category;
         }
@@ -285,7 +274,7 @@ exports.listSearch = (req, res) => {
 };
 
 exports.decreaseQuantity = (req, res, next) => {
-    let bulkOps = req.body.order.products((item) => {
+    let bulkOps = req.body.order.products.map((item) => {
         return {
             updateOne: {
                 filter: { _id: item._id },
@@ -293,11 +282,13 @@ exports.decreaseQuantity = (req, res, next) => {
             },
         };
     });
+
     Product.bulkWrite(bulkOps, {}, (error, products) => {
         if (error) {
             return res.status(400).json({
                 error: "Could not update product",
             });
         }
+        next();
     });
 };
