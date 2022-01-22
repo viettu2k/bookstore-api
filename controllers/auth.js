@@ -3,13 +3,11 @@ const jwt = require("jsonwebtoken"); // to generate signed token
 const expressJwt = require("express-jwt"); // for authorization check
 const { errorHandler } = require("../helpers/dbErrorHandler");
 
-// using promise
 exports.signup = (req, res) => {
     const user = new User(req.body);
     user.save((err, user) => {
         if (err) {
             return res.status(400).json({
-                // error: errorHandler(err)
                 error: "Email is taken",
             });
         }
